@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dworzec</title> <!-- tytuł strony  -->
+  <meta charset="ISO-8859-2"> <!-- wybrany zestaw znaków umożliwia korzystanie z polskich znaków-->
+</head>
+<body style="margin: 0;">
+ 
+  <script src="js/three.min.js"></script> <!-- ładowanie biblioteki z katalogu js-->
+  <script>
+var scena, camera, renderer, balwan, choinka, lawki, pociag1, pociag2, podloga, sciany, sufit, tablica, tory;
+var p1=0.1, p2=0.2;
+
+var klawiatura = {};
+var gracz = { wysokosc:1.8, speed:0.2, turnSpeed:Math.PI*0.02 };
+
+ 
+function init(){
+
+	scena = new THREE.Scene();
+	kamera = new THREE.PerspectiveCamera(90,window.innerWidth/window.innerHeight, 0.1, 1000);
+
+	//wiatła dodanie i umiejscowienie
+	var swiatloPunktowe = new THREE.PointLight( 0xffffff, 2, 15 );
+	var swiatloPunktowe1 = new THREE.PointLight( 0xffffff, 2, 15 );
+	scena.add(swiatloPunktowe);
+	scena.add(swiatloPunktowe1);
+	swiatloPunktowe.position.set(0, 10, 8);
+	swiatloPunktowe1.position.set(0, 10, -7);
+
+	//Ładowanie tekstur
+	var balwanTextura = new THREE.ImageUtils.loadTexture('tx/snieg.jpg');
+	var choinkaTextura = new THREE.ImageUtils.loadTexture('tx/Choinka.jpg');
+	var lawkiTextura = new THREE.ImageUtils.loadTexture('tx/Lawka_drewno.jpg');
+	var pociagTextura = new THREE.ImageUtils.loadTexture('tx/Pociag.jpg');
+	var podlogaTextura = new THREE.ImageUtils.loadTexture('tx/Podloga.jpg');
+	var scianyTextura = new THREE.ImageUtils.loadTexture('tx/Sciany.jpg');
+	var sufitTextura = new THREE.ImageUtils.loadTexture('tx/Sufit.jpg');
+	var tablicaTextura = new THREE.ImageUtils.loadTexture('tx/tablica.png');
+	var toryTextura = new THREE.ImageUtils.loadTexture('tx/tory.jpg');
+
+	podlogaTextura.wrapS = podlogaTextura.wrapT = THREE.RepeatWrapping;
+	sufitTextura.wrapS = sufitTextura.wrapT = THREE.RepeatWrapping;
+
+	//Tworzenie materiałów
+	var balwanMaterial = new THREE.MeshPhongMaterial({map: balwanTextura});
+	var choinkaMaterial = new THREE.MeshPhongMaterial({map: choinkaTextura});
+	var lawkiMaterial = new THREE.MeshPhongMaterial({map: lawkiTextura});
+	var pociagMaterial = new THREE.MeshPhongMaterial({map: pociagTextura});
+	var podlogaMaterial = new THREE.MeshPhongMaterial({map: podlogaTextura});
+	var scianyMaterial = new THREE.MeshPhongMaterial({map: scianyTextura});
+	var sufitMaterial = new THREE.MeshPhongMaterial({map: sufitTextura});
+	var tablicaMaterial = new THREE.MeshPhongMaterial({map: tablicaTextura});
+	var toryMaterial = new THREE.MeshPhongMaterial({map: toryTextura});
+
+	//Ładowanie obiektów
+	var loader = new THREE.ObjectLoader;
+	loader.load( "js/Dworzec.json", function ( loadedObj ) {
+	//przypisywanie obiektów
+	balwan = loadedObj.getObjectByName("Balwan");
+   	choinka = loadedObj.getObjectByName("Choinka");
+   	lawki = loadedObj.getObjectByName("lawka");
+   	pociag1 = loadedObj.getObjectByName("pociag1");
+   	pociag2 = loadedObj.getObjectByName("pociag2");
+	podloga = loadedObj.getObjectByName("Podloga"); 
+	sciany = loadedObj.getObjectByName("Sciany");
+	sufit = loadedObj.getObjectByName("Sufit");
+	tory = loadedObj.getObjectByName("tory");
+	tablica = loadedObj.getObjectByName("znak");
+
+	//Przypisywanie materiałów
+	balwan.material = balwanMaterial;
+	choinka.material = choinkaMaterial;
+	lawki.material = lawkiMaterial;
+	pociag1.material = pociagMaterial;
+	pociag2.material = pociagMaterial;
+	podloga.material = podlogaMaterial;
+	sciany.material = scianyMaterial;
+	sufit.material = sufitMaterial;
+	tory.material = toryMaterial;
+	tablica.material = tablicaMaterial;
+
+	//dodawanie obiektów do sceny
+	scena.add(choinka);
+	scena.add(lawki);
+	scena.add(pociag1);
+	scena.add(pociag2);
+	scena.add(balwan);	
+	scena.add(podloga);
+	scena.add(sciany);
+	scena.add(sufit);
+	scena.add(tory);
+	scena.add(tablica);
+
+	} );
+	
+	//Ustawienie kamery
+	kamera.position.set(0, gracz.wysokosc, -5);
+	kamera.lookAt(new THREE.Vector3(0,gracz.wysokosc,0));
+	kamera.position.set(0, 5, 0);
+	
+	renderer = new THREE.WebGLRenderer( {alpha: true} );
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x888888, 1);
+	document.body.appendChild(renderer.domElement);
+	render();
+}
+
+
+function render(){
+	requestAnimationFrame(render);
+	
+	//Poruszanie kamery
+	if(klawiatura[87]){ // W
+		kamera.position.x -= Math.sin(kamera.rotation.y) * gracz.speed;
+		kamera.position.z -= -Math.cos(kamera.rotation.y) * gracz.speed;
+	}
+	if(klawiatura[83]){ // S
+		kamera.position.x += Math.sin(kamera.rotation.y) * gracz.speed;
+		kamera.position.z += -Math.cos(kamera.rotation.y) * gracz.speed;
+	}
+	if(klawiatura[65]){ // A
+		kamera.position.x += Math.sin(kamera.rotation.y + Math.PI/2) * gracz.speed;
+		kamera.position.z += -Math.cos(kamera.rotation.y + Math.PI/2) * gracz.speed;
+	}
+	if(klawiatura[68]){ // D
+		kamera.position.x += Math.sin(kamera.rotation.y - Math.PI/2) * gracz.speed;
+		kamera.position.z += -Math.cos(kamera.rotation.y - Math.PI/2) * gracz.speed;
+	}
+	
+	if(klawiatura[37]){ // Strzałka w lewo
+		kamera.rotation.y -= gracz.turnSpeed;
+	}
+	if(klawiatura[39]){ // Strzałka w prawo
+		kamera.rotation.y += gracz.turnSpeed;
+	}
+
+	if(klawiatura[38]){ // Strzałka w prawo
+		kamera.position.y += gracz.speed;
+	}
+
+	if(klawiatura[40]){ // Strzałka w prawo
+		kamera.position.y -= gracz.speed;
+	}
+	
+	//Ruch pocišgów
+	if(pociag1.position.z > 55){	
+		pociag1.position.z = -55;	
+	}
+	pociag1.position.z += p1;
+	//reflektor11.position.set.(0,0,pociag1.position.z + 5);
+	if(pociag2.position.z < -55){	
+		pociag2.position.z = 55;	
+	}
+	pociag2.position.z -= p1;
+	
+	renderer.render(scena, kamera);
+}
+
+function keyDown(event){
+	klawiatura[event.keyCode] = true;
+}
+
+function keyUp(event){
+	klawiatura[event.keyCode] = false;
+}
+
+window.addEventListener('keydown', keyDown);
+window.addEventListener('keyup', keyUp);
+
+window.onload = init;
+
+  </script>
+ 
+</body>
+</html>
